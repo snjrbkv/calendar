@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="icon/free-icon-calendar-668278.png" />
+    <title>календарь</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 0 20px;
+      }
+      .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .day {
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #ccc;
+        cursor: pointer;
+      }
+      .day.active {
+        background-color: #4caf50;
+        color: white;
+      }
+      .day.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+      h1 {
+        margin-bottom: 5%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Каледарь для изучения английского</h1>
+    <div id="calendar" class="calendar"></div>
+
+    <!-- Аудио элемент -->
+    <audio id="successSound" src="./audio/apple-pay-succes.mp3"></audio>
+
+    <script>
+      // Создание дней месяца
+      const daysInMonth = new Date(2024, 8, 0).getDate(); // Сентябрь 2024
+      const calendar = document.getElementById("calendar");
+      const successSound = document.getElementById("successSound"); // Загрузка звука
+
+      // Функция для получения сохраненного состояния
+      const getSavedState = () => {
+        const savedState = localStorage.getItem("markedDays");
+        return savedState ? JSON.parse(savedState) : [];
+      };
+
+      // Функция для сохранения состояния
+      const saveState = (state) => {
+        localStorage.setItem("markedDays", JSON.stringify(state));
+      };
+
+      // Загрузка сохраненного состояния
+      const markedDays = getSavedState();
+
+      // Инициализация календаря
+      for (let i = 1; i <= daysInMonth; i++) {
+        const day = document.createElement("div");
+        day.className = "day";
+        day.textContent = i;
+
+        // Проверка, если день уже закрашен
+        if (markedDays.includes(i)) {
+          day.classList.add("active");
+        }
+
+        // Если предыдущий день не закрашен, блокируем текущий день
+        if (i > 1 && !markedDays.includes(i - 1)) {
+          day.classList.add("disabled");
+        }
+
+        day.addEventListener("click", () => {
+          if (day.classList.contains("disabled")) return;
+
+          day.classList.toggle("active");
+          const dayIndex = markedDays.indexOf(i);
+
+          if (day.classList.contains("active")) {
+            if (dayIndex === -1) markedDays.push(i);
+            successSound.play(); // Проигрываем звук при закрашивании
+          } else {
+            if (dayIndex !== -1) markedDays.splice(dayIndex, 1);
+          }
+
+          saveState(markedDays);
+
+          // Разблокируем следующий день, если текущий закрашен
+          if (i < daysInMonth && day.classList.contains("active")) {
+            const nextDay = calendar.querySelector(`.day:nth-child(${i + 1})`);
+            if (nextDay) nextDay.classList.remove("disabled");
+          }
+        });
+
+        calendar.appendChild(day);
+      }
+    </script>
+  </body>
+</html>
